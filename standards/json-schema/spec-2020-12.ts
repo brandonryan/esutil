@@ -5,7 +5,7 @@ export type JsonArr = JsonValue[]
 type URI = string
 type Regex = string
 
-export type SchemaType = undefined | "null" | "boolean" | "object" | "array" | "number" | "string" | "integer"
+export type SchemaType = "null" | "boolean" | "object" | "array" | "number" | "string" | "integer"
 export type SchemaTypeTuple = [SchemaType, ...SchemaType[]]
 export type JsonSchema = (BaseType & BaseProperties & StringProperties & NumberProperties & ArrayProperties & ObjectProperties) | boolean
 

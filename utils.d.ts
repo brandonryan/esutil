@@ -10,3 +10,11 @@ export type DeepPartial<T> = T extends AnyObj ? { [P in keyof T]?: DeepPartial<T
 
 //Type Mapping
 export type UnionFromTuple<T extends unknown[]> = T[number];
+export type FlattenIntersection<T extends object> = (
+	T extends infer O ? { [K in keyof O]: O[K] } : never
+)
+
+//Optional Defaults
+export type DefaultOptionalArray<Arr extends unknown[] | undefined> = (
+	Arr extends undefined ? [] : Arr
+)

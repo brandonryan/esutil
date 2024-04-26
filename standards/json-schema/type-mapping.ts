@@ -1,5 +1,5 @@
-import { UnionFromTuple } from '../../utils.d.ts';
-import { SchemaTypeTuple, JsonSchema, SchemaType, JsonValue, BaseType, StringProperties, BaseProperties, NumberProperties } from "./spec-2020-12.ts"
+import { UnionFromTuple, FlattenIntersection } from '../../utils.d.ts';
+import { SchemaTypeTuple, JsonSchema, SchemaType, JsonValue, ObjectProperties, ArrayProperties } from "./spec-2020-12.ts"
 
 type TypedSchema = Exclude<JsonSchema, boolean>
 
@@ -9,15 +9,53 @@ export type TypeFromSchema<S extends JsonSchema> = (
     ExtractTypeFromSchema<SchemaTypeUnion<S>, S>
 )
 
-type ExtractTypeFromSchema<T extends SchemaType, S extends JsonSchema> = (
-    T extends undefined ? JsonValue : 
+export type TypeFromSchemaTuple<Items extends JsonSchema[]> = (
+	Items extends [infer Head extends JsonSchema, ...infer Rest extends JsonSchema[]] ? (
+		[TypeFromSchema<Head>, ...TypeFromSchemaTuple<Rest>]
+	) :
+	[]
+)
+
+type ExtractTypeFromSchema<T extends SchemaType | unknown, S extends TypedSchema> = (
     T extends "string" ? string :
     T extends "number" | "integer" ? number :
     T extends "boolean" ? boolean :
     T extends "null" ? null :
-    T extends "object" ? object :
-    T extends "array" ? unknown[] :
-    never
+    T extends "object" ? ExtractObject<S> :
+    T extends "array" ? ExtractArray<S> :
+    JsonValue
+)
+
+type ExtractArray<S extends ArrayProperties> = (
+	[...ExtractPrefixItems<S>, ...(
+		S["items"] extends JsonSchema ? TypeFromSchema<S["items"]>[] : []
+	)]
+)
+
+type ExtractPrefixItems<S extends ArrayProperties> = (
+	S["prefixItems"] extends JsonSchema[] ? TypeFromSchemaTuple<S["prefixItems"]> : []
+)
+
+type ExtractObject<S extends ObjectProperties> = (
+	S["properties"] extends object ? FlattenIntersection<(
+		{ [Prop in OptionalObjectProperties<S>]?: TypeFromSchema<S["properties"][Prop]> } &
+		{ [Prop in RequiredObjectProperties<S>]: TypeFromSchema<S["properties"][Prop]> }
+	)> :
+	unknown
+)
+
+type RequiredObjectProperties<S extends ObjectProperties> = (
+	S["required"] extends unknown[] ? (
+		Extract<keyof S["properties"], UnionFromTuple<S["required"]>>
+	) :
+	never
+)
+  
+type OptionalObjectProperties<S extends ObjectProperties> = (
+	S["required"] extends unknown[] ? (
+		Exclude<keyof S["properties"], UnionFromTuple<S["required"]>>
+	) :
+	keyof S["properties"]
 )
 
 //Splitting the schema into union with properties
@@ -26,37 +64,5 @@ type SchemaTypeUnion<S extends TypedSchema> = (
         UnionFromTuple<S["type"]>
     ) :
     S["type"] extends SchemaType ? S["type"] :
-    undefined
+    unknown
 )
-
-// type SchemaPropsFromType<T extends SchemaType> = BaseProperties & (
-//     T extends "null" ? unknown :
-//     T extends "boolean" ? unknown :
-//     T extends "integer" | "number" ? NumberProperties :
-//     T extends "string" ? StringProperties :
-//     // T extends "object" ? ObjectTypeFromSchema<S> :
-//     // T extends "array" ? ArrayTypeFromSchema<S> :
-//     unknown
-// )
-
-type a = UnionFromTuple<SchemaTypeTuple>
-
-
-type AcceptableValue = "number" | "string" | "null"
-type AcceptableValueTuple = [AcceptableValue, ...AcceptableValue[]]
-type TestMapping<T extends AcceptableValue> = (
-    T extends "number" ? number :
-    T extends "null" ? null :
-    T extends "string" ? string :
-    never
-)
-
-type ExtractType<T extends AcceptableValue | AcceptableValueTuple> = (
-    T extends AcceptableValueTuple ? TestMapping<UnionFromTuple<T>> :
-    T extends AcceptableValue ? TestMapping<T> :
-    never
-)
-
-type Working1 = TestMapping<UnionFromTuple<AcceptableValueTuple>>
-type Working2 = TestMapping<UnionFromTuple<["number", "string"]>>
-type Working3 = ExtractType<["number", "string"]>
