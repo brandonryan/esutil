@@ -1,0 +1,14 @@
+{
+    "fmt": {
+        "options": {
+            "useTabs": true,
+            "lineWidth": 140,
+            "indentWidth": 4,
+            "singleQuote": true,
+            "proseWrap": "preserve"
+        }
+    },
+	"imports": {
+		"ts-toolbelt": "npm:ts-toolbelt"
+	}
+}
