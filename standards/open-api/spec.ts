@@ -78,8 +78,8 @@ type Response = {
 
 type Header = Omit<Parameter, "name" | "in">
 
-type ParameterLocation = "query" | "header" | "path" | "cookie"
-type ParameterStyle = "matrix" | "label" | "form" | "simple" | "spaceDelimited" | "pipeDelimited" | "deepObject"
+export type ParameterLocation = "query" | "header" | "path" | "cookie"
+export type ParameterStyle = "matrix" | "label" | "form" | "simple" | "spaceDelimited" | "pipeDelimited" | "deepObject"
 export type Parameter = {
 	name: string
 	in: ParameterLocation
